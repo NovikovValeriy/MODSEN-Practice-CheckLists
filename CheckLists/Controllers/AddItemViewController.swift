@@ -9,16 +9,21 @@ import UIKit
 
 struct AddItemValues {
     static let textFieldXPosition: CGFloat = 16
+    static let cellIdentifier = "AddItemCell"
+}
+
+protocol AddItemViewControllerDelegate: AnyObject {
+    func addItemViewControllerDidCancel(_ controller: AddItemViewController)
+    func addItemViewController(_ controller: AddItemViewController, didFinishAdding item: CheckListItem)
 }
 
 class AddItemViewController: UITableViewController {
     
-    static let cellIdentifier = "AddItemCell"
+    weak var delegate: AddItemViewControllerDelegate?
     
     //User Interface Elements
     private var textField: UITextField!
     private var doneBarButton: UIBarButtonItem!
-    
     
     init() {
         super.init(style: .grouped)
@@ -43,12 +48,17 @@ class AddItemViewController: UITableViewController {
     // MARK: = Configuration
     
     private func configureDataSource() {
-        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: AddItemViewController.cellIdentifier)
+        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: AddItemValues.cellIdentifier)
     }
     
     private func configureUI() {
+        configureTextField()
+        configureDoneBarButton()
+        configureNavBar()
+    }
+    
+    private func configureTextField() {
         textField = UITextField()
-        
         textField.font = UIFont(name: "System", size: 17)
         textField.placeholder = "Name of the Item"
         textField.adjustsFontSizeToFitWidth = false
@@ -57,15 +67,16 @@ class AddItemViewController: UITableViewController {
         textField.enablesReturnKeyAutomatically = true
         textField.clearButtonMode = .whileEditing
         textField.translatesAutoresizingMaskIntoConstraints = false
-        
         textField.addTarget(self, action: #selector(done), for: .editingDidEndOnExit)
-        
         textField.delegate = self
-        
-        
+    }
+    
+    private func configureDoneBarButton() {
         doneBarButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(done))
         doneBarButton.isEnabled = false
-        
+    }
+    
+    private func configureNavBar() {
         navigationItem.rightBarButtonItem = doneBarButton
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancel))
         navigationItem.title = "Add Item"
@@ -75,11 +86,12 @@ class AddItemViewController: UITableViewController {
     // MARK: - Actions
     
     @objc private func done() {
-        navigationController?.popViewController(animated: true)
+        let item = CheckListItem(text: textField.text!)
+        delegate?.addItemViewController(self, didFinishAdding: item)
     }
     
     @objc private func cancel() {
-        navigationController?.popViewController(animated: true)
+        delegate?.addItemViewControllerDidCancel(self)
     }
     
     // MARK: - Table view data source
@@ -96,7 +108,7 @@ class AddItemViewController: UITableViewController {
     
     //Cell template
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: AddItemViewController.cellIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: AddItemValues.cellIdentifier, for: indexPath)
         
         cell.contentView.addSubview(textField)
         NSLayoutConstraint.activate([
@@ -111,12 +123,15 @@ class AddItemViewController: UITableViewController {
         return cell
     }
     
+    //Selection disabling
     override func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
         return nil
     }
 }
 
 extension AddItemViewController: UITextFieldDelegate {
+    
+    //Disabling Done button when text changes to empty
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let oldText = textField.text!
         let stringRange = Range(range, in: oldText)!
@@ -125,6 +140,7 @@ extension AddItemViewController: UITextFieldDelegate {
         return true
     }
     
+    //Disabling Done button when text clears with a Clear button
     func textFieldShouldClear(_ textField: UITextField) -> Bool {
         doneBarButton.isEnabled = false
         return true

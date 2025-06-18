@@ -7,10 +7,13 @@
 
 import UIKit
 
+struct CheckListValues {
+    static let cellIdentifier = "CheckListCell"
+}
+
 class CheckListViewController: UITableViewController {
     
     private var items: [CheckListItem] = []
-    static let cellIdentifier = "CheckListCell"
     
     init() {
         super.init(style: .plain)
@@ -37,7 +40,7 @@ class CheckListViewController: UITableViewController {
     }
     
     private func configureDataSource() {
-        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: CheckListViewController.cellIdentifier)
+        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: CheckListValues.cellIdentifier)
     }
     
     private func dataFill() {
@@ -52,6 +55,7 @@ class CheckListViewController: UITableViewController {
     
     @objc private func goToAddItemScreen() {
         let addItemVC = AddItemViewController()
+        addItemVC.delegate = self
         navigationController?.pushViewController(addItemVC, animated: true)
     }
     
@@ -69,7 +73,7 @@ class CheckListViewController: UITableViewController {
     
     //Cell template
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: CheckListViewController.cellIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: CheckListValues.cellIdentifier, for: indexPath)
         var content = cell.defaultContentConfiguration()
         
         let item = items[indexPath.row]
@@ -95,6 +99,20 @@ class CheckListViewController: UITableViewController {
         tableView.deleteRows(at: [indexPath], with: .fade)
     }
     
+}
+
+extension CheckListViewController: AddItemViewControllerDelegate {
+    func addItemViewControllerDidCancel(_ controller: AddItemViewController) {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    func addItemViewController(_ controller: AddItemViewController, didFinishAdding item: CheckListItem) {
+        let newRowIndex = items.count
+        items.append(item)
+        let indexPath = IndexPath(row: newRowIndex, section: 0)
+        tableView.insertRows(at: [indexPath], with: .automatic)
+        navigationController?.popViewController(animated: true)
+    }
 }
 
 #Preview {
