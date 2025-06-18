@@ -8,11 +8,13 @@
 import UIKit
 
 class CheckListViewController: UITableViewController {
-
+    
     private var items: [CheckListItem] = []
+    static let cellIdentifier = "CheckListCell"
     
     init() {
         super.init(style: .plain)
+        dataFill()
     }
     
     required init?(coder: NSCoder) {
@@ -21,95 +23,80 @@ class CheckListViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "CheckListItem")
         
+        configureDataSource()
+        configureNavigationUI()
+    }
+    
+    // MARK: - Configuration
+    
+    private func configureNavigationUI() {
+        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(goToAddItemScreen))
+        title = "CheckLists"
+    }
+    
+    private func configureDataSource() {
+        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: CheckListViewController.cellIdentifier)
+    }
+    
+    private func dataFill() {
         items.append(CheckListItem(text: "Walk the dog", checked: true))
         items.append(CheckListItem(text: "Brush my teeth", checked: true))
         items.append(CheckListItem(text: "Learn iOS development", checked: true))
         items.append(CheckListItem(text: "Soccer practice", checked: true))
         items.append(CheckListItem(text: "Eat ice cream", checked: true))
     }
-
+    
+    // MARK: - Actions
+    
+    @objc private func goToAddItemScreen() {
+        let addItemVC = AddItemViewController()
+        navigationController?.pushViewController(addItemVC, animated: true)
+    }
+    
     // MARK: - Table view data source
-
+    
+    //Number of sections
     override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
         return 1
     }
-
+    
+    //Nmber of rows
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
         return items.count
     }
     
+    //Cell template
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CheckListItem", for: indexPath)
-
+        let cell = tableView.dequeueReusableCell(withIdentifier: CheckListViewController.cellIdentifier, for: indexPath)
         var content = cell.defaultContentConfiguration()
-        let item = items[indexPath.row % items.count]
+        
+        let item = items[indexPath.row]
         content.text = "\(item.text)"
         cell.contentConfiguration = content
         cell.accessoryType = item.checked ? .checkmark : .none
-
+        
         return cell
     }
     
+    //Select row
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell = tableView.cellForRow(at: indexPath) {
-            items[indexPath.row % items.count].checked.toggle()
-            cell.accessoryType = items[indexPath.row % items.count].checked ? .checkmark : .none
+            items[indexPath.row].checked.toggle()
+            cell.accessoryType = items[indexPath.row].checked ? .checkmark : .none
         }
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-    */
-
-    /*
-    // Override to support editing the table view.
+    //Delete row by swiping
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+        items.remove(at: indexPath.row)
+        tableView.deleteRows(at: [indexPath], with: .fade)
     }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
+    
 }
 
 #Preview {
-    return CheckListViewController()
+    return NavigationViewController(rootViewController: CheckListViewController())
 }
