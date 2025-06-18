@@ -9,37 +9,59 @@ import UIKit
 
 class CheckListViewController: UITableViewController {
 
+    private var items: [CheckListItem] = []
+    
+    init() {
+        super.init(style: .plain)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "CheckListItem")
+        
+        items.append(CheckListItem(text: "Walk the dog", checked: true))
+        items.append(CheckListItem(text: "Brush my teeth", checked: true))
+        items.append(CheckListItem(text: "Learn iOS development", checked: true))
+        items.append(CheckListItem(text: "Soccer practice", checked: true))
+        items.append(CheckListItem(text: "Eat ice cream", checked: true))
     }
 
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
         // #warning Incomplete implementation, return the number of sections
-        return 0
+        return 1
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return 0
+        return items.count
     }
-
-    /*
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CheckListItem", for: indexPath)
 
-        // Configure the cell...
+        var content = cell.defaultContentConfiguration()
+        let item = items[indexPath.row % items.count]
+        content.text = "\(item.text)"
+        cell.contentConfiguration = content
+        cell.accessoryType = item.checked ? .checkmark : .none
 
         return cell
     }
-    */
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if let cell = tableView.cellForRow(at: indexPath) {
+            items[indexPath.row % items.count].checked.toggle()
+            cell.accessoryType = items[indexPath.row % items.count].checked ? .checkmark : .none
+        }
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
 
     /*
     // Override to support conditional editing of the table view.
@@ -86,4 +108,8 @@ class CheckListViewController: UITableViewController {
     }
     */
 
+}
+
+#Preview {
+    return CheckListViewController()
 }
