@@ -7,19 +7,21 @@
 
 import UIKit
 
-struct AddItemValues {
+struct ItemDetailValues {
     static let textFieldXPosition: CGFloat = 16
     static let cellIdentifier = "AddItemCell"
 }
 
-protocol AddItemViewControllerDelegate: AnyObject {
-    func addItemViewControllerDidCancel(_ controller: AddItemViewController)
-    func addItemViewController(_ controller: AddItemViewController, didFinishAdding item: CheckListItem)
+protocol ItemDetailViewControllerDelegate: AnyObject {
+    func itemDetailViewControllerDidCancel(_ controller: ItemDetailViewController)
+    func itemDetailViewController(_ controller: ItemDetailViewController, didFinishAdding item: CheckListItem)
+    func itemDetailViewController(_ controller: ItemDetailViewController, didFinishEditing item: CheckListItem)
 }
 
-class AddItemViewController: UITableViewController {
+class ItemDetailViewController: UITableViewController {
     
-    weak var delegate: AddItemViewControllerDelegate?
+    weak var delegate: ItemDetailViewControllerDelegate?
+    var itemToEdit: CheckListItem?
     
     //User Interface Elements
     private var textField: UITextField!
@@ -48,7 +50,7 @@ class AddItemViewController: UITableViewController {
     // MARK: = Configuration
     
     private func configureDataSource() {
-        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: AddItemValues.cellIdentifier)
+        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: ItemDetailValues.cellIdentifier)
     }
     
     private func configureUI() {
@@ -69,29 +71,44 @@ class AddItemViewController: UITableViewController {
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.addTarget(self, action: #selector(done), for: .editingDidEndOnExit)
         textField.delegate = self
+        
+        if let item = itemToEdit {
+            textField.text = item.text
+        }
     }
     
     private func configureDoneBarButton() {
         doneBarButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(done))
-        doneBarButton.isEnabled = false
+        if itemToEdit == nil {
+            doneBarButton.isEnabled = false
+        }
     }
     
     private func configureNavBar() {
         navigationItem.rightBarButtonItem = doneBarButton
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancel))
-        navigationItem.title = "Add Item"
+        if itemToEdit != nil {
+            navigationItem.title = "Edit Item"
+        } else {
+            navigationItem.title = "Add Item"
+        }
         navigationItem.largeTitleDisplayMode = .never
     }
     
     // MARK: - Actions
     
     @objc private func done() {
-        let item = CheckListItem(text: textField.text!)
-        delegate?.addItemViewController(self, didFinishAdding: item)
+        if var item = itemToEdit {
+            item.text = textField.text!
+            delegate?.itemDetailViewController(self, didFinishEditing: item)
+        } else {
+            let item = CheckListItem(text: textField.text!)
+            delegate?.itemDetailViewController(self, didFinishAdding: item)
+        }
     }
     
     @objc private func cancel() {
-        delegate?.addItemViewControllerDidCancel(self)
+        delegate?.itemDetailViewControllerDidCancel(self)
     }
     
     // MARK: - Table view data source
@@ -108,12 +125,12 @@ class AddItemViewController: UITableViewController {
     
     //Cell template
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: AddItemValues.cellIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: ItemDetailValues.cellIdentifier, for: indexPath)
         
         cell.contentView.addSubview(textField)
         NSLayoutConstraint.activate([
-            textField.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: AddItemValues.textFieldXPosition),
-            textField.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -AddItemValues.textFieldXPosition),
+            textField.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: ItemDetailValues.textFieldXPosition),
+            textField.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -ItemDetailValues.textFieldXPosition),
             textField.topAnchor.constraint(equalTo: cell.contentView.topAnchor),
             textField.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor),
             textField.heightAnchor.constraint(equalToConstant: cell.contentView.frame.height)
@@ -129,7 +146,7 @@ class AddItemViewController: UITableViewController {
     }
 }
 
-extension AddItemViewController: UITextFieldDelegate {
+extension ItemDetailViewController: UITextFieldDelegate {
     
     //Disabling Done button when text changes to empty
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
@@ -148,5 +165,5 @@ extension AddItemViewController: UITextFieldDelegate {
 }
 
 #Preview {
-    NavigationViewController(rootViewController: AddItemViewController())
+    NavigationViewController(rootViewController: ItemDetailViewController())
 }
