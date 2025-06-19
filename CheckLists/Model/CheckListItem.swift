@@ -7,7 +7,12 @@
 
 import Foundation
 
-struct CheckListItem {
+class CheckListItem: NSObject, Codable {
     var text = ""
     var checked = true
+    
+    init(text: String = "", checked: Bool = true) {
+        self.text = text
+        self.checked = checked
+    }
 }

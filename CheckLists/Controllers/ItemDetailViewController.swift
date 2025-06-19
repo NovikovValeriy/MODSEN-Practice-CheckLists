@@ -1,5 +1,5 @@
 //
-//  AddItemViewController.swift
+//  ItemDetailViewController.swift
 //  CheckLists
 //
 //  Created by Валерий Новиков on 18.06.25.
@@ -9,7 +9,7 @@ import UIKit
 
 struct ItemDetailValues {
     static let textFieldXPosition: CGFloat = 16
-    static let cellIdentifier = "AddItemCell"
+    static let cellIdentifier = "ItemDetailCell"
 }
 
 protocol ItemDetailViewControllerDelegate: AnyObject {
