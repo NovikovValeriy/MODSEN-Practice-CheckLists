@@ -138,8 +138,7 @@ class ListDetailViewController: UITableViewController {
             list.iconName = iconName
             delegate?.listDetailViewController(self, didFinishEditing: list)
         } else {
-            let list = CheckList(name: textField.text!)
-            list.iconName = iconName
+            let list = CheckList(name: textField.text!, iconName: iconName)
             delegate?.listDetailViewController(self, didFinishAdding: list)
         }
     }
