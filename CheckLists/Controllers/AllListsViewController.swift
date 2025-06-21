@@ -75,6 +75,7 @@ class AllListsViewController: UITableViewController {
                 reuseIdentifier: self.cellIdentifier
             )
         }
+        
         let checkList = dataModel.lists[indexPath.row]
         var text = ""
         if checkList.items.count == 0 {
@@ -85,6 +86,9 @@ class AllListsViewController: UITableViewController {
         }
         cell.textLabel!.text = "\(checkList.name)"
         cell.detailTextLabel!.text = text
+        
+        let image = UIImage(named: checkList.iconName)
+        cell.imageView!.image = image
         
         cell.accessoryType = .detailDisclosureButton
         return cell

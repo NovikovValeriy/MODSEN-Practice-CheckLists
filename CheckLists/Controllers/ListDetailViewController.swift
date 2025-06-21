@@ -9,6 +9,8 @@ import UIKit
 
 struct ListDetailValues {
     static let textFieldXPosition: CGFloat = 16
+    static let iconPadding: CGFloat = 8
+    static let accessoryButtonTrailingConstant: CGFloat = 16
 }
 
 protocol ListDetailViewControllerDelegate: AnyObject {
@@ -21,12 +23,15 @@ class ListDetailViewController: UITableViewController {
     
     weak var delegate: ListDetailViewControllerDelegate?
     var listToEdit: CheckList?
+    var iconName = "Folder"
     
     private let cellIdentifier = "ListDetailCell"
     
     //User Interface Elements
     private var textField: UITextField!
     private var doneBarButton: UIBarButtonItem!
+    private var iconImageView: UIImageView!
+    private var accessoryButton: UIButton!
     
     init() {
         super.init(style: .grouped)
@@ -59,6 +64,8 @@ class ListDetailViewController: UITableViewController {
     private func configureUI() {
         configureTextField()
         configureDoneBarButton()
+        configureIconImageView()
+        configureAccessoryButton()
         configureNavBar()
     }
     
@@ -87,6 +94,31 @@ class ListDetailViewController: UITableViewController {
         }
     }
     
+    private func configureIconImageView() {
+        iconImageView = UIImageView()
+        if let list = listToEdit {
+            iconName = list.iconName
+        }
+        iconImageView.image = UIImage(named: iconName)
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.isUserInteractionEnabled = false
+    }
+    
+    private func configureAccessoryButton() {
+        accessoryButton = UIButton()
+        accessoryButton.translatesAutoresizingMaskIntoConstraints = false
+        let imageView = UIImageView(image: UIImage(systemName: "chevron.right"))
+        imageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(weight: .medium)
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        accessoryButton.addSubview(imageView)
+        NSLayoutConstraint.activate([
+            imageView.centerXAnchor.constraint(equalTo: accessoryButton.centerXAnchor),
+            imageView.centerYAnchor.constraint(equalTo: accessoryButton.centerYAnchor),
+        ])
+        accessoryButton.tintColor = .placeholderText
+        accessoryButton.isUserInteractionEnabled = false
+    }
+    
     private func configureNavBar() {
         navigationItem.rightBarButtonItem = doneBarButton
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancel))
@@ -101,11 +133,13 @@ class ListDetailViewController: UITableViewController {
     // MARK: - Actions
     
     @objc private func done() {
-        if var list = listToEdit {
+        if let list = listToEdit {
             list.name = textField.text!
+            list.iconName = iconName
             delegate?.listDetailViewController(self, didFinishEditing: list)
         } else {
             let list = CheckList(name: textField.text!)
+            list.iconName = iconName
             delegate?.listDetailViewController(self, didFinishAdding: list)
         }
     }
@@ -118,7 +152,7 @@ class ListDetailViewController: UITableViewController {
     
     //Number of sections
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return 2
     }
     
     //Number of rows
@@ -130,22 +164,43 @@ class ListDetailViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: self.cellIdentifier, for: indexPath)
         
-        cell.contentView.addSubview(textField)
-        NSLayoutConstraint.activate([
-            textField.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: ListDetailValues.textFieldXPosition),
-            textField.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -ListDetailValues.textFieldXPosition),
-            textField.topAnchor.constraint(equalTo: cell.contentView.topAnchor),
-            textField.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor),
-            textField.heightAnchor.constraint(equalToConstant: cell.contentView.frame.height)
-        ])
-        cell.selectionStyle = .none
+        switch indexPath.section {
+        case 0:
+            cell.contentView.addSubview(textField)
+            NSLayoutConstraint.activate([
+                textField.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: ListDetailValues.textFieldXPosition),
+                textField.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -ListDetailValues.textFieldXPosition),
+                textField.topAnchor.constraint(equalTo: cell.contentView.topAnchor),
+                textField.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor),
+                textField.heightAnchor.constraint(equalToConstant: cell.contentView.frame.height)
+            ])
+            cell.selectionStyle = .none
+        default:
+            cell.textLabel!.text = "Icon"
+            cell.contentView.addSubview(iconImageView)
+            cell.contentView.addSubview(accessoryButton)
+            NSLayoutConstraint.activate([
+                iconImageView.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+                iconImageView.heightAnchor.constraint(equalTo: cell.heightAnchor, constant: -ListDetailValues.iconPadding),
+                iconImageView.widthAnchor.constraint(equalTo: cell.heightAnchor, constant: -ListDetailValues.iconPadding),
+                accessoryButton.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -ListDetailValues.accessoryButtonTrailingConstant),
+                accessoryButton.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+                iconImageView.trailingAnchor.constraint(equalTo: accessoryButton.leadingAnchor)
+            ])
+        }
         
         return cell
     }
     
-    //Selection disabling
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let iconPickerVC = IconPickerViewController()
+        iconPickerVC.delegate = self
+        navigationController?.pushViewController(iconPickerVC, animated: true)
+    }
+    
+    //Text field selection disabling
     override func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
-        return nil
+        return indexPath.section == 1 ? indexPath : nil
     }
 }
 
@@ -164,6 +219,14 @@ extension ListDetailViewController: UITextFieldDelegate {
     func textFieldShouldClear(_ textField: UITextField) -> Bool {
         doneBarButton.isEnabled = false
         return true
+    }
+}
+
+extension ListDetailViewController: IconPickerViewControllerDelegate {
+    func iconPicker(_ controller: IconPickerViewController, didPick iconName: String) {
+        self.iconName = iconName
+        iconImageView.image = UIImage(named: iconName)
+        navigationController?.popViewController(animated: true)
     }
 }
 
