@@ -27,6 +27,8 @@ class ItemDetailViewController: UITableViewController {
     //User Interface Elements
     private var textField: UITextField!
     private var doneBarButton: UIBarButtonItem!
+    private var shouldRemindSwitch: UISwitch!
+    private var datePicker: UIDatePicker!
     
     init() {
         super.init(style: .grouped)
@@ -59,6 +61,8 @@ class ItemDetailViewController: UITableViewController {
     private func configureUI() {
         configureTextField()
         configureDoneBarButton()
+        configureSwitch()
+        configureDatePicker()
         configureNavBar()
     }
     
@@ -98,14 +102,52 @@ class ItemDetailViewController: UITableViewController {
         navigationItem.largeTitleDisplayMode = .never
     }
     
+    private func configureSwitch() {
+        shouldRemindSwitch = UISwitch()
+        shouldRemindSwitch.onTintColor = UIColor.globalTint()
+        if let item = itemToEdit {
+            shouldRemindSwitch.isOn = item.shouldRemind
+        }
+        
+        shouldRemindSwitch.addTarget(self, action: #selector(shouldRemindToggled), for: .valueChanged)
+    }
+    
+    private func configureDatePicker() {
+        datePicker = UIDatePicker()
+        if let item = itemToEdit {
+            datePicker.date = item.dueDate
+        } else {
+            let calendar = Calendar.current
+            datePicker.date = calendar.date(byAdding: .day, value: 1, to: .now) ?? Date.now
+        }
+    }
+    
     // MARK: - Actions
     
     @objc private func done() {
+        /*let item: CheckListItem!
+        if let newItem = itemToEdit {
+            item = newItem
+        } else {
+            item = CheckListItem()
+        }
+        item.text = textField.text!
+        item.shouldRemind = shouldRemindSwitch.isOn
+        item.dueDate = datePicker.date
+        item.scheduleNotification()
+        delegate?.itemDetailViewController(self, didFinishEditing: item)*/
         if var item = itemToEdit {
             item.text = textField.text!
+            item.shouldRemind = shouldRemindSwitch.isOn
+            item.dueDate = datePicker.date
+            item.scheduleNotification()
             delegate?.itemDetailViewController(self, didFinishEditing: item)
         } else {
-            let item = CheckListItem(text: textField.text!)
+            let item = CheckListItem()
+            item.text = textField.text!
+            item.shouldRemind = shouldRemindSwitch.isOn
+            item.dueDate = datePicker.date
+            item.scheduleNotification()
             delegate?.itemDetailViewController(self, didFinishAdding: item)
         }
     }
@@ -114,15 +156,34 @@ class ItemDetailViewController: UITableViewController {
         delegate?.itemDetailViewControllerDidCancel(self)
     }
     
+    @objc private func shouldRemindToggled() {
+        if shouldRemindSwitch.isOn {
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { [weak self] (granted, error) in
+                guard let self = self else { return }
+                if !granted {
+                    self.shouldRemindSwitch.isOn = false
+                }
+            }
+        }
+    }
+    
     // MARK: - Table view data source
     
     //Number of sections
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return 2
     }
     
     //Number of rows
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        switch section {
+        case 0:
+            return 1
+        case 1:
+            return 2
+        default:
+            break
+        }
         return 1
     }
     
@@ -130,15 +191,33 @@ class ItemDetailViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: self.cellIdentifier, for: indexPath)
         
-        cell.contentView.addSubview(textField)
-        NSLayoutConstraint.activate([
-            textField.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: ItemDetailValues.textFieldXPosition),
-            textField.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -ItemDetailValues.textFieldXPosition),
-            textField.topAnchor.constraint(equalTo: cell.contentView.topAnchor),
-            textField.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor),
-            textField.heightAnchor.constraint(equalToConstant: cell.contentView.frame.height)
-        ])
-        cell.selectionStyle = .none
+        switch indexPath.section {
+        case 0:
+            cell.contentView.addSubview(textField)
+            NSLayoutConstraint.activate([
+                textField.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: ItemDetailValues.textFieldXPosition),
+                textField.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -ItemDetailValues.textFieldXPosition),
+                textField.topAnchor.constraint(equalTo: cell.contentView.topAnchor),
+                textField.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor),
+                textField.heightAnchor.constraint(equalToConstant: cell.contentView.frame.height)
+            ])
+            cell.selectionStyle = .none
+        case 1:
+            switch indexPath.row {
+            case 0:
+                cell.accessoryView = shouldRemindSwitch
+                cell.textLabel!.text = "Remind Me"
+                break
+            case 1:
+                cell.accessoryView = datePicker
+                cell.textLabel!.text = "Due Date"
+                break
+            default :
+                break
+            }
+        default:
+            break
+        }
         
         return cell
     }

@@ -25,6 +25,15 @@ class DataModel {
         handleFirstTime()
     }
     
+    class func nextCheckListItemID() -> Int {
+        let userDefaults = UserDefaults.standard
+        let key = "CheckListItemID"
+        let itemID = userDefaults.integer(forKey: key)
+        userDefaults.set(itemID + 1, forKey: key)
+        userDefaults.synchronize()
+        return itemID
+    }
+    
     func sortCheckLists() {
         lists.sort {
             return $0.name.localizedStandardCompare($1.name) == .orderedAscending
