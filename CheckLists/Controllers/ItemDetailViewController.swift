@@ -9,7 +9,6 @@ import UIKit
 
 struct ItemDetailValues {
     static let textFieldXPosition: CGFloat = 16
-    static let cellIdentifier = "ItemDetailCell"
 }
 
 protocol ItemDetailViewControllerDelegate: AnyObject {
@@ -23,6 +22,8 @@ class ItemDetailViewController: UITableViewController {
     weak var delegate: ItemDetailViewControllerDelegate?
     var itemToEdit: CheckListItem?
     
+    private let cellIdentifier = "ItemDetailCell"
+    
     //User Interface Elements
     private var textField: UITextField!
     private var doneBarButton: UIBarButtonItem!
@@ -34,6 +35,8 @@ class ItemDetailViewController: UITableViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,7 +53,7 @@ class ItemDetailViewController: UITableViewController {
     // MARK: = Configuration
     
     private func configureDataSource() {
-        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: ItemDetailValues.cellIdentifier)
+        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: self.cellIdentifier)
     }
     
     private func configureUI() {
@@ -125,7 +128,7 @@ class ItemDetailViewController: UITableViewController {
     
     //Cell template
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: ItemDetailValues.cellIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: self.cellIdentifier, for: indexPath)
         
         cell.contentView.addSubview(textField)
         NSLayoutConstraint.activate([

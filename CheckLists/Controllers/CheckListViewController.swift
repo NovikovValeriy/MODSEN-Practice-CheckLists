@@ -10,12 +10,14 @@ import UIKit
 struct CheckListValues {
     static let checkImageXPosition: CGFloat = 16
     static let checkImagePadding: CGFloat = 8
-    static let cellIdentifier = "CheckListCell"
 }
 
 class CheckListViewController: UITableViewController {
     
-    private var items: [CheckListItem] = []
+    //private var items: [CheckListItem] = []
+    private let cellIdentifier = "CheckListCell"
+    
+    var checklist: CheckList!
     
     init() {
         super.init(style: .plain)
@@ -26,76 +28,44 @@ class CheckListViewController: UITableViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Lifecycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         configureDataSource()
         configureNavigationUI()
-        loadCheckListItems()
-//        print("Documents folder is: \(documentsDirectory())")
-//        print("Data file path is: \(dataFilePath())")
-    }
-    
-    // MARK: - Data persistence
-    
-    func saveChecklistItems() {
-        let encoder = PropertyListEncoder()
-        do {
-            let data = try encoder.encode(items)
-            try data.write(to: dataFilePath(), options: .atomic)
-        } catch {
-            print("Error encoding item array: \(error)")
-        }
-    }
-    
-    func loadCheckListItems() {
-        let path = dataFilePath()
-        if let data = try? Data(contentsOf: path) {
-            let decoder = PropertyListDecoder()
-            do {
-                items = try decoder.decode([CheckListItem].self, from: data)
-            } catch {
-                print("Error decoding item array: \(error)")
-            }
-        }
-    }
-    
-    func documentsDirectory() -> URL {
-        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        return paths[0]
-    }
-    
-    func dataFilePath() -> URL {
-        return documentsDirectory().appendingPathComponent("Checklists.plist")
+        //loadCheckListItems()
     }
     
     // MARK: - Configuration
     
     private func configureNavigationUI() {
-        navigationController?.navigationBar.prefersLargeTitles = true
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(goToAddItemScreen))
-        title = "CheckLists"
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(goToItemDetail))
+        title = checklist.name
     }
     
     private func configureDataSource() {
-        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: CheckListValues.cellIdentifier)
+        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: self.cellIdentifier)
     }
     
-    private func dataFill() {
-        items.append(CheckListItem(text: "Walk the dog", checked: true))
-        items.append(CheckListItem(text: "Brush my teeth", checked: true))
-        items.append(CheckListItem(text: "Learn iOS development", checked: true))
-        items.append(CheckListItem(text: "Soccer practice", checked: true))
-        items.append(CheckListItem(text: "Eat ice cream", checked: true))
-    }
+//    private func dataFill() {
+//        items.append(CheckListItem(text: "Walk the dog", checked: true))
+//        items.append(CheckListItem(text: "Brush my teeth", checked: true))
+//        items.append(CheckListItem(text: "Learn iOS development", checked: true))
+//        items.append(CheckListItem(text: "Soccer practice", checked: true))
+//        items.append(CheckListItem(text: "Eat ice cream", checked: true))
+//    }
     
     // MARK: - Actions
     
-    @objc private func goToAddItemScreen() {
-        let addItemVC = ItemDetailViewController()
-        addItemVC.delegate = self
-        navigationController?.pushViewController(addItemVC, animated: true)
+    @objc private func goToItemDetail() {
+        let itemDetailVC = ItemDetailViewController()
+        itemDetailVC.delegate = self
+        navigationController?.pushViewController(itemDetailVC, animated: true)
     }
+    
     
     // MARK: - Table view data source
     
@@ -106,15 +76,15 @@ class CheckListViewController: UITableViewController {
     
     //Nmber of rows
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return items.count
+        return checklist.items.count
     }
     
     //Cell template
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: CheckListValues.cellIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: self.cellIdentifier, for: indexPath)
         var content = cell.defaultContentConfiguration()
         
-        let item = items[indexPath.row]
+        let item = checklist.items[indexPath.row]
         content.text = "\(item.text)"
         
         let checkImage = UIImageView()
@@ -148,25 +118,25 @@ class CheckListViewController: UITableViewController {
     //Select row
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell = tableView.cellForRow(at: indexPath) {
-            items[indexPath.row].checked.toggle()
-            (cell.viewWithTag(1) as! UIImageView).isHidden = !items[indexPath.row].checked
-            saveChecklistItems()
+            checklist.items[indexPath.row].checked.toggle()
+            (cell.viewWithTag(1) as! UIImageView).isHidden = !checklist.items[indexPath.row].checked
+            //saveChecklistItems()
         }
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
     //Delete row by swiping
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        items.remove(at: indexPath.row)
+        checklist.items.remove(at: indexPath.row)
         tableView.deleteRows(at: [indexPath], with: .fade)
-        saveChecklistItems()
+        //saveChecklistItems()
     }
     
     //Accessory pressed
     override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
         let addItemVC = ItemDetailViewController()
         addItemVC.delegate = self
-        addItemVC.itemToEdit = items[indexPath.row]
+        addItemVC.itemToEdit = checklist.items[indexPath.row]
         navigationController?.pushViewController(addItemVC, animated: true)
     }
 }
@@ -179,23 +149,23 @@ extension CheckListViewController: ItemDetailViewControllerDelegate {
     }
     
     func itemDetailViewController(_ controller: ItemDetailViewController, didFinishAdding item: CheckListItem) {
-        let newRowIndex = items.count
-        items.append(item)
+        let newRowIndex = checklist.items.count
+        checklist.items.append(item)
         let indexPath = IndexPath(row: newRowIndex, section: 0)
         tableView.insertRows(at: [indexPath], with: .automatic)
         navigationController?.popViewController(animated: true)
-        saveChecklistItems()
+        //saveChecklistItems()
     }
     
     func itemDetailViewController(_ controller: ItemDetailViewController, didFinishEditing item: CheckListItem) {
-        if let index = items.firstIndex(of: item) {
+        if let index = checklist.items.firstIndex(of: item) {
             let indexPath = IndexPath(row: index, section: 0)
             if let cell = tableView.cellForRow(at: indexPath) {
                 (cell.viewWithTag(2) as! UILabel).text = item.text
             }
         }
         navigationController?.popViewController(animated: true)
-        saveChecklistItems()
+        //saveChecklistItems()
     }
 }
 
