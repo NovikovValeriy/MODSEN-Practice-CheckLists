@@ -125,17 +125,6 @@ class ItemDetailViewController: UITableViewController {
     // MARK: - Actions
     
     @objc private func done() {
-        /*let item: CheckListItem!
-        if let newItem = itemToEdit {
-            item = newItem
-        } else {
-            item = CheckListItem()
-        }
-        item.text = textField.text!
-        item.shouldRemind = shouldRemindSwitch.isOn
-        item.dueDate = datePicker.date
-        item.scheduleNotification()
-        delegate?.itemDetailViewController(self, didFinishEditing: item)*/
         if var item = itemToEdit {
             item.text = textField.text!
             item.shouldRemind = shouldRemindSwitch.isOn

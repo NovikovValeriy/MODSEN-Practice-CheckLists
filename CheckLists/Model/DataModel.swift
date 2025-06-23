@@ -20,6 +20,7 @@ class DataModel {
     }
     
     init() {
+        print(dataFilePath())
         loadCheckLists()
         registerDefaults()
         handleFirstTime()

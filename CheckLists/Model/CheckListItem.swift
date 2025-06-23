@@ -10,7 +10,7 @@ import UserNotifications
 
 class CheckListItem: NSObject, Codable {
     var text = ""
-    var checked = true
+    var checked = false
     var dueDate = Date()
     var shouldRemind = false
     var itemID = -1
@@ -48,7 +48,7 @@ class CheckListItem: NSObject, Codable {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["\(itemID)"])
     }
     
-    deinit() {
+    deinit {
         removeNotification()
     }
 }

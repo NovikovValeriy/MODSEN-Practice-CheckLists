@@ -191,6 +191,7 @@ class ListDetailViewController: UITableViewController {
         return cell
     }
     
+    //Row selection
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let iconPickerVC = IconPickerViewController()
         iconPickerVC.delegate = self
@@ -222,6 +223,8 @@ extension ListDetailViewController: UITextFieldDelegate {
 }
 
 extension ListDetailViewController: IconPickerViewControllerDelegate {
+    
+    //Icon selection
     func iconPicker(_ controller: IconPickerViewController, didPick iconName: String) {
         self.iconName = iconName
         iconImageView.image = UIImage(named: iconName)

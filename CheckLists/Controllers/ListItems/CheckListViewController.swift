@@ -14,14 +14,12 @@ struct CheckListValues {
 
 class CheckListViewController: UITableViewController {
     
-    //private var items: [CheckListItem] = []
     private let cellIdentifier = "CheckListCell"
     
     var checklist: CheckList!
     
     init() {
         super.init(style: .plain)
-        //dataFill()
     }
     
     required init?(coder: NSCoder) {
@@ -35,7 +33,6 @@ class CheckListViewController: UITableViewController {
         
         configureDataSource()
         configureNavigationUI()
-        //loadCheckListItems()
     }
     
     // MARK: - Configuration
@@ -49,14 +46,6 @@ class CheckListViewController: UITableViewController {
     private func configureDataSource() {
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: self.cellIdentifier)
     }
-    
-//    private func dataFill() {
-//        items.append(CheckListItem(text: "Walk the dog", checked: true))
-//        items.append(CheckListItem(text: "Brush my teeth", checked: true))
-//        items.append(CheckListItem(text: "Learn iOS development", checked: true))
-//        items.append(CheckListItem(text: "Soccer practice", checked: true))
-//        items.append(CheckListItem(text: "Eat ice cream", checked: true))
-//    }
     
     // MARK: - Actions
     
@@ -120,7 +109,6 @@ class CheckListViewController: UITableViewController {
         if let cell = tableView.cellForRow(at: indexPath) {
             checklist.items[indexPath.row].checked.toggle()
             (cell.viewWithTag(1) as! UIImageView).isHidden = !checklist.items[indexPath.row].checked
-            //saveChecklistItems()
         }
         tableView.deselectRow(at: indexPath, animated: true)
     }
@@ -129,7 +117,6 @@ class CheckListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         checklist.items.remove(at: indexPath.row)
         tableView.deleteRows(at: [indexPath], with: .fade)
-        //saveChecklistItems()
     }
     
     //Accessory pressed
@@ -154,7 +141,6 @@ extension CheckListViewController: ItemDetailViewControllerDelegate {
         let indexPath = IndexPath(row: newRowIndex, section: 0)
         tableView.insertRows(at: [indexPath], with: .automatic)
         navigationController?.popViewController(animated: true)
-        //saveChecklistItems()
     }
     
     func itemDetailViewController(_ controller: ItemDetailViewController, didFinishEditing item: CheckListItem) {
@@ -165,7 +151,6 @@ extension CheckListViewController: ItemDetailViewControllerDelegate {
             }
         }
         navigationController?.popViewController(animated: true)
-        //saveChecklistItems()
     }
 }
 
