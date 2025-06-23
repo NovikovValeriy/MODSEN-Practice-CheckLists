@@ -7,7 +7,7 @@
 
 import Foundation
 
-class DataModel {
+struct DataModel {
     var lists = [CheckList]()
     
     var indexOfSelectedCheckList: Int {
@@ -20,13 +20,12 @@ class DataModel {
     }
     
     init() {
-        print(dataFilePath())
         loadCheckLists()
         registerDefaults()
         handleFirstTime()
     }
     
-    class func nextCheckListItemID() -> Int {
+    static func nextCheckListItemID() -> Int {
         let userDefaults = UserDefaults.standard
         let key = "CheckListItemID"
         let itemID = userDefaults.integer(forKey: key)
@@ -35,7 +34,7 @@ class DataModel {
         return itemID
     }
     
-    func sortCheckLists() {
+    mutating func sortCheckLists() {
         lists.sort {
             return $0.name.localizedStandardCompare($1.name) == .orderedAscending
         }
@@ -51,7 +50,7 @@ class DataModel {
         }
     }
     
-    func loadCheckLists() {
+    mutating func loadCheckLists() {
         let path = dataFilePath()
         if let data = try? Data(contentsOf: path) {
             let decoder = PropertyListDecoder()
@@ -78,7 +77,7 @@ class DataModel {
         UserDefaults.standard.register(defaults: dictionary)
     }
     
-    func handleFirstTime() {
+    mutating func handleFirstTime() {
         let firstTime = UserDefaults.standard.bool(forKey: "FirstTime")
         if firstTime {
             let checkList = CheckList(name: "List")
